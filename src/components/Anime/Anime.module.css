@@ -1,0 +1,19 @@
+.Anime-container {
+	display: flex;
+	margin: 2em 0;
+	border: 2px solid red;
+}
+
+.Anime-text-container {
+	display: flex;
+	align-items: center;
+}
+
+.Anime-text-container div {
+	padding: 0 2em;
+}
+
+#anime-img {
+	max-width: 300px;
+	max-width: 250px;
+}
