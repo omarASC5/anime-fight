@@ -33,26 +33,34 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 		yts(opNames[i], (err, r) => {
 			if (err) throw err;
 			
-			const videoUrl = r.videos[0].url;
-
-			const video = youtubedl(videoUrl, ['--format=140'], {cwd: path});
-	
 			const fileNum = parseInt(opNames[0].charAt(opNames[0].length - 1));
+			
+			function downloadSong(j) {
+				let videoUrl = r.videos[j].url;
 
-			video.on('info', (info) => {
-				console.log('Download started');
-				console.log(`Filename: ${info.title}`);
-				console.log(`Size: ${info.size}`);
+				let video = youtubedl(videoUrl, ['--format=140'], {cwd: path});
+				video.on('info', (info) => {
+					console.log('Download started');
+					console.log(`Filename: ${info.title}`);
+					console.log(`Size: ${info.size}`);
 
-					if (info._duration_raw < 60 * 6) {
-						if (info.title.includes((i + 1).toString())) {
-							video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
-						} else {
-							video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
-							maxNumSongs = 1;
-						}
+					if (info.size === undefined) {
+						downloadSong(j + 1);
+						console.log('hi', videoUrl);
 					}
-			});
+	
+						if (info._duration_raw < 60 * 6) {
+							if (info.title.includes((fileNum).toString())) {
+								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
+							} else {
+								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
+								maxNumSongs = 1;
+							}
+						}
+				});
+			}
+
+			downloadSong(0);
 		});
 	}
 };
