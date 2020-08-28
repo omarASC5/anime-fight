@@ -24,24 +24,21 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 	const path = `./${searchTerm}`;
 
 	const opNames = opsToSearch(searchTerm, maxNumSongs, type);
-
+	console.log(opNames)
 	makeFolder(`./${searchTerm}`);
 
 	preventDuplicates(opNames, maxNumSongs, path);
-
-	// let l = opNames.length;
-	// for (let i = 0; i < l && i < maxNumSongs; i++, l--) {
 		
-		function downloadSong(j, isOp, count) {
-			if (count > opNames.length || count > maxNumSongs) {
-				return;
-			}
-			yts(opNames[count], (err, r) => {
+
+	function downloadSong(j, isOp, count) {
+		const ytDLHelper = () => {
+			console.log(opNames)
+			yts(opNames[0], (err, r) => {
 				if (err) throw err;
 				
 				const fileNum = parseInt(opNames[0].charAt(opNames[0].length - 1));
 				let videoUrl = r.videos[j].url;
-
+	
 				let video = youtubedl(videoUrl, ['--format=140'], {cwd: path});
 				video.on('info', (info) => {
 					console.log('Download started');
@@ -51,10 +48,10 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 						'closing', 'ed', 'ost', 'OP', 'OPENING', 'ENDING', 'CLOSING',
 						'ED'
 					];
-					animeOpTags.push(opNames[count]);
+					animeOpTags.push(opNames[0]);
 					animeOpTags.push(`${searchTerm} op ${fileNum}`);
 					animeOpTags.push(`${searchTerm} ed ${fileNum}`);
-
+	
 					if (info.tags && info.tags.length !== 0) {
 						for (let tag of info.tags) {
 							if (animeOpTags.includes(tag)) {
@@ -78,16 +75,23 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 							} else {
 								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
 								maxNumSongs = 1;
-								opNames.shift();
-								downloadSong(j, isOp, count + 1);
+								return;
 							}
 						}
 				});
 			});
 		}
+		if (count === maxNumSongs || opNames.length === 0) {
+			return;
+		}
+		if (opNames.length === 1) {
+			return ytDLHelper();
+		}
 
-			downloadSong(0, false, 0);
-	// }
+		ytDLHelper();
+	}
+
+	downloadSong(0, false, 0);
 };
 
 const makeFolder = (path) => {
@@ -104,9 +108,12 @@ const preventDuplicates = (opNames, maxNumSongs, path) => {
 			opNames.splice(opNames[i], 1);
 		}
 	}
+	if (opNames[opNames.length - 2] === opNames[opNames.length - 1]) {
+		opNames.pop();
+	}
 };
  
 const animeName = 'Naruto';
-const maxNumSongs = 3;
+const maxNumSongs = 6;
 
 downloadAnimeSongsYT(animeName, maxNumSongs, 'opening');
