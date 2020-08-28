@@ -29,38 +29,62 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 
 	preventDuplicates(opNames, maxNumSongs, path);
 
-	for (let i = 0; i < opNames.length && i < maxNumSongs; i++) {
+	let l = opNames.length;
+	for (let i = 0; i < l && i < maxNumSongs; i++, l--) {
 		yts(opNames[i], (err, r) => {
 			if (err) throw err;
 			
 			const fileNum = parseInt(opNames[0].charAt(opNames[0].length - 1));
 			
-			function downloadSong(j) {
+			function downloadSong(j, isOp, i) {
+				// if (i > opNames.length || i > maxNumSongs) {
+				// 	return;
+				// }
 				let videoUrl = r.videos[j].url;
 
 				let video = youtubedl(videoUrl, ['--format=140'], {cwd: path});
 				video.on('info', (info) => {
 					console.log('Download started');
 					console.log(`Filename: ${info.title}`);
-					console.log(`Size: ${info.size}`);
+					console.log(`Size: ${info.size}`, info.tags);
+					const animeOpTags = ['op', 'opening', 'OST', 'open', 'ending',
+						'closing', 'ed', 'ost', 'OP', 'OPENING', 'ENDING', 'CLOSING',
+						'ED'
+					];
+					animeOpTags.push(opNames[i]);
+					animeOpTags.push(`${searchTerm} op ${fileNum}`);
+					animeOpTags.push(`${searchTerm} ed ${fileNum}`);
 
-					if (info.size === undefined) {
-						downloadSong(j + 1);
+					if (info.tags && info.tags.length !== 0) {
+						for (let tag of info.tags) {
+							if (animeOpTags.includes(tag)) {
+								isOp = true;
+								console.log('siiii', videoUrl, `${path}/${fileNum}_op.m4a`);
+								break;
+							}
+						}
+					}
+					console.log('isOp', isOp === true);
+					if (info.size === undefined || !isOp) {
+						downloadSong(j + 1, isOp);
 						console.log('hi', videoUrl);
 					}
 	
 						if (info._duration_raw < 60 * 6) {
 							if (info.title.includes((fileNum).toString())) {
 								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
+								// downloadSong(j, isOp, i + 1);
 							} else {
 								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
 								maxNumSongs = 1;
+								// downloadSong(j, isOp, i + 1);
 							}
 						}
 				});
+				opNames.shift();
 			}
 
-			downloadSong(0);
+			downloadSong(0, false, 0);
 		});
 	}
 };
@@ -81,7 +105,7 @@ const preventDuplicates = (opNames, maxNumSongs, path) => {
 	}
 };
  
-const animeName = 'Time of Eve';
-const maxNumSongs = 1;
+const animeName = 'Naruto';
+const maxNumSongs = 3;
 
 downloadAnimeSongsYT(animeName, maxNumSongs, 'opening');
