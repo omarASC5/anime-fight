@@ -29,17 +29,17 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 
 	preventDuplicates(opNames, maxNumSongs, path);
 
-	let l = opNames.length;
-	for (let i = 0; i < l && i < maxNumSongs; i++, l--) {
-		yts(opNames[i], (err, r) => {
-			if (err) throw err;
-			
-			const fileNum = parseInt(opNames[0].charAt(opNames[0].length - 1));
-			
-			function downloadSong(j, isOp, i) {
-				// if (i > opNames.length || i > maxNumSongs) {
-				// 	return;
-				// }
+	// let l = opNames.length;
+	// for (let i = 0; i < l && i < maxNumSongs; i++, l--) {
+		
+		function downloadSong(j, isOp, count) {
+			if (count > opNames.length || count > maxNumSongs) {
+				return;
+			}
+			yts(opNames[count], (err, r) => {
+				if (err) throw err;
+				
+				const fileNum = parseInt(opNames[0].charAt(opNames[0].length - 1));
 				let videoUrl = r.videos[j].url;
 
 				let video = youtubedl(videoUrl, ['--format=140'], {cwd: path});
@@ -51,7 +51,7 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 						'closing', 'ed', 'ost', 'OP', 'OPENING', 'ENDING', 'CLOSING',
 						'ED'
 					];
-					animeOpTags.push(opNames[i]);
+					animeOpTags.push(opNames[count]);
 					animeOpTags.push(`${searchTerm} op ${fileNum}`);
 					animeOpTags.push(`${searchTerm} ed ${fileNum}`);
 
@@ -73,20 +73,21 @@ const downloadAnimeSongsYT = (searchTerm, maxNumSongs, type) => {
 						if (info._duration_raw < 60 * 6) {
 							if (info.title.includes((fileNum).toString())) {
 								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
-								// downloadSong(j, isOp, i + 1);
+								opNames.shift();
+								downloadSong(j, isOp, count + 1);
 							} else {
 								video.pipe(fs.createWriteStream(`${path}/${fileNum}_op.m4a`));
 								maxNumSongs = 1;
-								// downloadSong(j, isOp, i + 1);
+								opNames.shift();
+								downloadSong(j, isOp, count + 1);
 							}
 						}
 				});
-				opNames.shift();
-			}
+			});
+		}
 
 			downloadSong(0, false, 0);
-		});
-	}
+	// }
 };
 
 const makeFolder = (path) => {
